@@ -1,11 +1,15 @@
-# Usamos Nginx, un servidor web profesional y ligero
+# ETAPA 1: COCINAR (Construir la app)
+# Usamos Node para instalar y compilar
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# ETAPA 2: SERVIR (Mostrar la web)
+# Usamos Nginx para mostrar solo el resultado final optimizado
 FROM nginx:alpine
-
-# Borramos la configuración por defecto de Nginx para evitar conflictos
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copiamos TODOS los archivos de tu carpeta actual a la carpeta pública del servidor
-COPY . /usr/share/nginx/html
-
-# Le decimos a Railway que use el puerto 80 (el estándar web)
+COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
